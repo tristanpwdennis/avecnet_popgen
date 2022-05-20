@@ -1,0 +1,6 @@
+{
+    "Description": "allele length",
+    "ID": "LEN",
+    "Number": "A",
+    "Type": "Integer"
+}

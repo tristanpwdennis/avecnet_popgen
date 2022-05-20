@@ -1,0 +1,6 @@
+{
+    "Description": "Mean mapping quality of observed alternate alleles",
+    "ID": "MQM",
+    "Number": "A",
+    "Type": "Float"
+}

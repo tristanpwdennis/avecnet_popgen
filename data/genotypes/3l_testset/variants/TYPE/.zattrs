@@ -1,0 +1,6 @@
+{
+    "Description": "The type of allele, either snp, mnp, ins, del, or complex.",
+    "ID": "TYPE",
+    "Number": "A",
+    "Type": "String"
+}

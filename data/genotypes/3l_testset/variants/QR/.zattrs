@@ -1,0 +1,6 @@
+{
+    "Description": "Reference allele quality sum in phred",
+    "ID": "QR",
+    "Number": "1",
+    "Type": "Integer"
+}

@@ -1,0 +1,6 @@
+{
+    "Description": "Number of alternate observations on the forward strand",
+    "ID": "SAF",
+    "Number": "A",
+    "Type": "Integer"
+}

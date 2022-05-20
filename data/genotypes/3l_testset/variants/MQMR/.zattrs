@@ -1,0 +1,6 @@
+{
+    "Description": "Mean mapping quality of observed reference alleles",
+    "ID": "MQMR",
+    "Number": "1",
+    "Type": "Float"
+}

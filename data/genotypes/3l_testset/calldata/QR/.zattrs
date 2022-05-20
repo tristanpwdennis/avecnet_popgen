@@ -1,0 +1,6 @@
+{
+    "Description": "Sum of quality of the reference observations",
+    "ID": "QR",
+    "Number": "1",
+    "Type": "Integer"
+}

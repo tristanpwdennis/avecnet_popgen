@@ -1,0 +1,6 @@
+{
+    "Description": "Reference allele quality sum in phred for partial observations",
+    "ID": "PQR",
+    "Number": "1",
+    "Type": "Float"
+}

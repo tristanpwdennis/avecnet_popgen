@@ -1,0 +1,6 @@
+{
+    "Description": "Alternate allele observations, with partial observations recorded fractionally",
+    "ID": "PAO",
+    "Number": "A",
+    "Type": "Float"
+}

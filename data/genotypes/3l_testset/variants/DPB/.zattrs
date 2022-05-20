@@ -1,0 +1,6 @@
+{
+    "Description": "Total read depth per bp at the locus; bases in reads overlapping / bases in haplotype",
+    "ID": "DPB",
+    "Number": "1",
+    "Type": "Float"
+}

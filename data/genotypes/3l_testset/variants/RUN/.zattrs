@@ -1,0 +1,6 @@
+{
+    "Description": "Run length: the number of consecutive repeats of the alternate allele in the reference genome",
+    "ID": "RUN",
+    "Number": "A",
+    "Type": "Integer"
+}

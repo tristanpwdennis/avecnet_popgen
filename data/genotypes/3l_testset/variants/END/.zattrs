@@ -1,0 +1,6 @@
+{
+    "Description": "Last position (inclusive) in gVCF output record.",
+    "ID": "END",
+    "Number": "1",
+    "Type": "Integer"
+}

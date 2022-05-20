@@ -1,0 +1,6 @@
+{
+    "Description": "Estimated allele frequency in the range (0,1]",
+    "ID": "AF",
+    "Number": "A",
+    "Type": "Float"
+}

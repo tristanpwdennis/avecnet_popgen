@@ -1,0 +1,6 @@
+{
+    "Description": "Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy",
+    "ID": "GL",
+    "Number": "G",
+    "Type": "Float"
+}

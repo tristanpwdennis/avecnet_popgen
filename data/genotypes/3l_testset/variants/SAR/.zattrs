@@ -1,0 +1,6 @@
+{
+    "Description": "Number of alternate observations on the reverse strand",
+    "ID": "SAR",
+    "Number": "A",
+    "Type": "Integer"
+}

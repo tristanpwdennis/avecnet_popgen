@@ -1,0 +1,6 @@
+{
+    "Description": "Reference allele observation count, with partial observations recorded fractionally",
+    "ID": "PRO",
+    "Number": "1",
+    "Type": "Float"
+}

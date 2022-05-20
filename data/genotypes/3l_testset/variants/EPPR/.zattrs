@@ -1,0 +1,6 @@
+{
+    "Description": "End Placement Probability for reference observations: Phred-scaled upper-bounds estimate of the probability of observing the deviation between EL and ER given E(EL/ER) ~ 0.5, derived using Hoeffding's inequality",
+    "ID": "EPPR",
+    "Number": "1",
+    "Type": "Float"
+}

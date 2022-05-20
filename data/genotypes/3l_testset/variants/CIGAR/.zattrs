@@ -1,0 +1,6 @@
+{
+    "Description": "The extended CIGAR representation of each alternate allele, with the exception that '=' is replaced by 'M' to ease VCF parsing.  Note that INDEL alleles do not have the first matched base (which is provided by default, per the spec) referred to by the CIGAR.",
+    "ID": "CIGAR",
+    "Number": "A",
+    "Type": "String"
+}

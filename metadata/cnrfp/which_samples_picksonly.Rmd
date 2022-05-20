@@ -1,0 +1,111 @@
+---
+title: "Picking Mosquitoes for Whole-Genome-Sequencing"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+#get all of our stuff we need
+pkg = c("rnaturalearthdata", "rnaturalearth", "tidyverse", "sf", "lubridate", "ggspatial", "raster" ,"rgdal")
+#install.packages(pkg) #install packages if you need them and load
+new.packages <- pkg[!(pkg %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+lapply(pkg, require, character.only = TRUE)#
+
+setwd('~/OneDrive - University of Glasgow/MOVE/samples/')
+
+#read sample data from 14 and 15 and bind together
+bf_samples_14_15 = rbind(read.csv("MosquitoesDensity_2014_MV.csv"), 
+                         read.csv("MosquitoesDensity_2015_MV.csv"))
+
+#read bf cluster coords
+bf_coords = read.csv("cluster_coords.csv")
+bf_netdata = read.csv("NetsRollout_MV.csv")
+bf_rollout = read.csv('rollout_mv.csv')
+
+clustersamplecount = 10
+
+s = bf_rollout %>% 
+  dplyr::select(cluster, season) %>% 
+  distinct() %>% 
+  group_by(cluster) %>% 
+  count() %>% 
+  filter(n > 6) %>% 
+  mutate(tag="tag")
+
+bf_rollout_tagged = bf_rollout %>% 
+  left_join(.,(s[sample(nrow(s), clustersamplecount), ])) #join to random sample of the tag df
+  
+
+
+#get africa maps sf
+africa = ne_countries(scale="medium", type='countries', continent='africa', returnclass = "sf")
+```
+
+```{r calc, include=FALSE}
+seasoncount = bf_rollout_tagged %>% dplyr::select(season) %>% distinct() %>% count()
+samplesize = 10
+num_samples = seasoncount*clustersamplecount*samplesize
+```
+```{r ecoregions, echo = FALSE}
+colors = read.csv('rastermetadata.csv', header =F)
+s = raster('~/Downloads/PROBAV_LC100_global_v3.0.1_2019-nrt_Discrete-Classification-map_EPSG-4326.tif') #load raster file
+e = extent(-5, -4, 9.8, 11) #define extent to crop
+bf = crop(s, e) #crop raster
+bfdf = as.data.frame(rasterToPoints(bf))
+colnames(bfdf) = c('x', 'y', 'cover')
+
+colours = as.vector(colors$V2)
+bfdf$cover = as.factor(bfdf$cover)
+```
+
+
+```{r plottext, echo=FALSE, warning=FALSE}
+ggplot() +
+  geom_raster(data = bfdf , aes(x = x, y = y, fill = cover), alpha = 0.7) +
+  scale_fill_manual(values = colours) +
+  geom_text(data=bf_rollout_tagged, aes(x=lon, y=lat, label=cluster), colour = '#ff0000')
+```
+
+**Figure 1:** Cluster numbers overlaid on map of land cover (see **Table 1** for detailed key)
+
+```{r plotpicks, echo= FALSE, warning=FALSE}
+picks = as.data.frame(c(37, 8, 27, 23, 32, 13, 12, 35, 24, 18, 10))
+picks$newtag = "picked"
+colnames(picks) = c('cluster', 'picktag')
+bf_picks = left_join(bf_rollout_tagged, picks)
+bf_picks$picktag=replace_na(bf_picks$picktag, 'notpicked')
+
+ggplot() +
+  geom_raster(data = bfdf , aes(x = x, y = y, fill = cover), alpha = 0.7) +
+  scale_fill_manual(values = colours) +
+  geom_point(data=bf_picks, aes(x=lon, y=lat, colour=picktag), alpha = 3, colours = c('red', 'blue'))
+```
+
+**Figure 2:** Picked/unpicked Clusters plotted on a map of land cover (see **Table 1**) 
+
+It looks like a cline of thinning forest from S-N with some shrubland roughly where Mafalda defined the forest park as. So let's make sure we have some samples represented by all of these. 
+
+We want to sample in four, evenly spaced time points. The tables I am using to generate these figures suggest that sampling began for all Clusters in Y1.S2, so this seems like a good starting point. Then maybe we could pick Y1.S4 (which looks like the first 'half' of the DUO rollout), Y2.S2 (after the second 'half' of the staggered DUO rollout) and Y2.S4 (after the rollout has been completed).
+
+
+* We picked: **37, 8, 27, 23, 32, 13, 12, 35, 24, 18, 10**
+* From each sample, we want to sequence 10 mosquitoes, over four time points, per cluster (440 samples in total)
+* Some of the mosquitoes will fail to sequence well, so it may be worth seeing if we can use a few 'spare' per sample set
+* In this case, perhaps the time points ought to be **Y1.S2, Y1.S4, Y2.S2, Y2.S4**
+
+The land cover data above is from [here](https://land.copernicus.eu/global/products/lc) from Copernicus.
+
+
+
+
+
+
+
+
+
+**Table 1:** Metadata table for land cover values
+```{r ecotable, echo=FALSE}
+colors
+```

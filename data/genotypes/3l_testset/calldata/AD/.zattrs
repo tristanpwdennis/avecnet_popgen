@@ -1,0 +1,6 @@
+{
+    "Description": "Number of observation for each allele",
+    "ID": "AD",
+    "Number": "R",
+    "Type": "Integer"
+}

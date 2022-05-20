@@ -1,0 +1,6 @@
+{
+    "Description": "Minimum depth in gVCF output block.",
+    "ID": "MIN_DP",
+    "Number": "1",
+    "Type": "Integer"
+}

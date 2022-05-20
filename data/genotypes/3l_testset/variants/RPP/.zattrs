@@ -1,0 +1,6 @@
+{
+    "Description": "Read Placement Probability: Phred-scaled upper-bounds estimate of the probability of observing the deviation between RPL and RPR given E(RPL/RPR) ~ 0.5, derived using Hoeffding's inequality",
+    "ID": "RPP",
+    "Number": "A",
+    "Type": "Float"
+}

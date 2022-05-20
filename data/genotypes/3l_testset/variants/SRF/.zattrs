@@ -1,0 +1,6 @@
+{
+    "Description": "Number of reference observations on the forward strand",
+    "ID": "SRF",
+    "Number": "1",
+    "Type": "Integer"
+}
