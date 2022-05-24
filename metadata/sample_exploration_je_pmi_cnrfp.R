@@ -53,15 +53,16 @@ maps
 ggsave('~/OneDrive - University of Glasgow/MOVE/data/dw_anopheles_03_21/maps.pdf', width = 11, height = 8, units = 'in', device = 'pdf')
 
 #load preseq metadata and join to gps data for ghana samples
-ghana_library_metadata = fread('~/OneDrive - University of Glasgow/MOVE/samples/pmi/complete_preseq_metadata.csv')
+ghana_library_metadata = data.table::fread('~/OneDrive - University of Glasgow/MOVE/samples/pmi/complete_preseq_metadata.csv')
 colesites = read.csv('~/OneDrive - University of Glasgow/MOVE/samples/pmi/ghana_site_gps.csv')
 ghana_library_metadata = ghana_library_metadata %>% left_join(colesites, by = c('Pop'= 'site'))
 gsites = unique(ghana_library_metadata[`sine PCR result` == 'gambiae'][,c('Pop', 'lat', 'long')])
 gsites$schedule = 'PMI - IRS'
-anet= fread('~/OneDrive - University of Glasgow/MOVE/samples/cnrfp/avecnet_db_updated.csv')
-anet_locs = fread('~/OneDrive - University of Glasgow/MOVE/samples/cnrfp/cluster_coords.csv')
+anet= data.table::fread('~/OneDrive - University of Glasgow/MOVE/samples/cnrfp/avecnet_db_updated.csv')
+anet_locs = data.table::fread('~/OneDrive - University of Glasgow/MOVE/samples/cnrfp/cluster_coords.csv')
 
 anet_clusters = c(1,2,3,4,9,10,11,12,18,20,26,29,36,37,39)
+length(anet_clusters)
 bsites = anet_locs[anet_locs$cluster %in% anet_clusters]
 colnames(bsites) = c('Pop', 'lat', 'long')
 bsites$schedule = 'AvecNet'

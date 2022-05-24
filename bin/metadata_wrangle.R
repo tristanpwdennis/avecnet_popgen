@@ -3,7 +3,7 @@
 ######
 library(data.table)
 library(tidyverse)
-setwd('~/Projects/anopheles_pmi/analysis/')
+setwd('~/Projects/MOVE/anopheles_pmi_cnrfp/')
 lib_metadata = setDT(read.csv('metadata/complete_library_metadata.csv'))
 
 #read irs history and clean, melt to long
@@ -20,8 +20,8 @@ unique(sentinel_site_history$Pop)
 #setkey(lib_metadata, Pop, collection.year, format = 'y')
 lib_metadata = left_join(lib_metadata, sentinel_site_history, by = c('Pop', 'collection.year'))
 
-qualimap_qc = read.delim('sequencing_qc/multiqc_data/multiqc_qualimap_bamqc_genome_results.txt')
-flagstat_qc = read.delim('sequencing_qc/multiqc_data/multiqc_samtools_flagstat.txt')
+qualimap_qc = read.delim('data/sequencing_qc_pmi_samples/multiqc_data/multiqc_qualimap_bamqc_genome_results.txt')
+flagstat_qc = read.delim('data/sequencing_qc_pmi_samples//multiqc_data/multiqc_samtools_flagstat.txt')
 
 flagstat_qc$cgr_id = as.numeric(gsub("\\_.*","",flagstat_qc$Sample))
 qualimap_qc$cgr_id = as.numeric(gsub("\\_.*","",qualimap_qc$Sample))
@@ -73,8 +73,17 @@ hist(qc_init_pass$mean_coverage, breaks = c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,1
 
 bampath = '/export/projects/III-data/lamberton/tdd3v/anopheles_pmi/bam/'
 cgrsuf = '_220322_L001.srt.dp.bam'
-paste0(bampath, qc_init_pass$cgr_num, cgrsuf)
 
+bamloc = paste0(bampath, qc_pass_minus_daves_tests$cgr_num, cgrsuf)
+qc_pass_minus_daves_tests = cbind(qc_pass_minus_daves_tests, bamloc)
+
+#add angsd bam ordering (zero indexed rownum)
+qc_pass_minus_daves_tests$angsdno = seq(0, nrow(qc_pass_minus_daves_tests)-1)
+#add sample loc
+loc = fread('metadata/pmi/ghana_site_gps.csv')
+qc_pass_minus_daves_tests = left_join(qc_pass_minus_daves_tests, loc, by=c('Pop' = 'site'))
+#write pmi metadata
+write_csv(x = qc_pass_minus_daves_tests, 'metadata/pmi_metadata.csv')
 #all samples with cov >= 1
 #write(paste0(bampath, qc_pass_minus_daves_tests$cgr_num, cgrsuf), file = 'poplists/allsamples')
 
