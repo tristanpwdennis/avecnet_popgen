@@ -1,6 +1,0 @@
-{
-    "Description": "Number of reference observations on the reverse strand",
-    "ID": "SRR",
-    "Number": "1",
-    "Type": "Integer"
-}

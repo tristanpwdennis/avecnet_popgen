@@ -1,6 +1,0 @@
-{
-    "Description": "Count of full observations of this alternate haplotype.",
-    "ID": "AO",
-    "Number": "A",
-    "Type": "Integer"
-}

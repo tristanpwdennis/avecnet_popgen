@@ -1,6 +1,0 @@
-{
-    "Description": "Number of genotyping iterations required to reach convergence or bailout.",
-    "ID": "GTI",
-    "Number": "1",
-    "Type": "Integer"
-}

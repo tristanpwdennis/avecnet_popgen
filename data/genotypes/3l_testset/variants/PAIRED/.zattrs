@@ -1,6 +1,0 @@
-{
-    "Description": "Proportion of observed alternate alleles which are supported by properly paired read fragments",
-    "ID": "PAIRED",
-    "Number": "A",
-    "Type": "Float"
-}

@@ -1,6 +1,0 @@
-{
-    "Description": "Alternate allele quality sum in phred",
-    "ID": "QA",
-    "Number": "A",
-    "Type": "Integer"
-}

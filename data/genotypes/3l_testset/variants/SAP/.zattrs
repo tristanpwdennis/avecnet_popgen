@@ -1,6 +1,0 @@
-{
-    "Description": "Strand balance probability for the alternate allele: Phred-scaled upper-bounds estimate of the probability of observing the deviation between SAF and SAR given E(SAF/SAR) ~ 0.5, derived using Hoeffding's inequality",
-    "ID": "SAP",
-    "Number": "A",
-    "Type": "Float"
-}

@@ -1,6 +1,0 @@
-{
-    "Description": "Allele balance at heterozygous sites: a number between 0 and 1 representing the ratio of reads showing the reference allele to all reads, considering only reads from individuals called as heterozygous",
-    "ID": "AB",
-    "Number": "A",
-    "Type": "Float"
-}

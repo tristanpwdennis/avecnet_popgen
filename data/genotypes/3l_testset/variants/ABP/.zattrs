@@ -1,6 +1,0 @@
-{
-    "Description": "Allele balance probability at heterozygous sites: Phred-scaled upper-bounds estimate of the probability of observing the deviation between ABR and ABA given E(ABR/ABA) ~ 0.5, derived using Hoeffding's inequality",
-    "ID": "ABP",
-    "Number": "A",
-    "Type": "Float"
-}

@@ -1,6 +1,0 @@
-{
-    "Description": "Count of full observations of the reference haplotype.",
-    "ID": "RO",
-    "Number": "1",
-    "Type": "Integer"
-}

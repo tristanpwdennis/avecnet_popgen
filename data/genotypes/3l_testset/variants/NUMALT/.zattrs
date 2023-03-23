@@ -1,6 +1,0 @@
-{
-    "Description": "Number of unique non-reference alleles in called genotypes at this position.",
-    "ID": "NUMALT",
-    "Number": "1",
-    "Type": "Integer"
-}

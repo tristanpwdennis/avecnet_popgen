@@ -1,6 +1,0 @@
-{
-    "Description": "Alternate allele depth ratio.  Ratio between depth in samples with each called alternate allele and those without.",
-    "ID": "DPRA",
-    "Number": "A",
-    "Type": "Float"
-}

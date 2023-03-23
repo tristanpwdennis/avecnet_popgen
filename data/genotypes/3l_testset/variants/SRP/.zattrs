@@ -1,6 +1,0 @@
-{
-    "Description": "Strand balance probability for the reference allele: Phred-scaled upper-bounds estimate of the probability of observing the deviation between SRF and SRR given E(SRF/SRR) ~ 0.5, derived using Hoeffding's inequality",
-    "ID": "SRP",
-    "Number": "1",
-    "Type": "Float"
-}

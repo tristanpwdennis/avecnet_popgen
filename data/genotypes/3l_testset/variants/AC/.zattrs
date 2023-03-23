@@ -1,6 +1,0 @@
-{
-    "Description": "Total number of alternate alleles in called genotypes",
-    "ID": "AC",
-    "Number": "A",
-    "Type": "Integer"
-}

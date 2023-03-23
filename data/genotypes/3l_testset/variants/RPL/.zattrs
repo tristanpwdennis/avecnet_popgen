@@ -1,6 +1,0 @@
-{
-    "Description": "Reads Placed Left: number of reads supporting the alternate balanced to the left (5') of the alternate allele",
-    "ID": "RPL",
-    "Number": "A",
-    "Type": "Float"
-}

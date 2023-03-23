@@ -1,6 +1,0 @@
-{
-    "Description": "Alternate allele quality sum in phred for partial observations",
-    "ID": "PQA",
-    "Number": "A",
-    "Type": "Float"
-}

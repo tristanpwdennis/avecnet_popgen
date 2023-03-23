@@ -1,6 +1,0 @@
-{
-    "Description": "Proportion of observed reference alleles which are supported by properly paired read fragments",
-    "ID": "PAIREDR",
-    "Number": "1",
-    "Type": "Float"
-}

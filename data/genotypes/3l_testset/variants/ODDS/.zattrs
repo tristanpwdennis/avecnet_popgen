@@ -1,6 +1,0 @@
-{
-    "Description": "The log odds ratio of the best genotype combination to the second-best.",
-    "ID": "ODDS",
-    "Number": "1",
-    "Type": "Float"
-}

@@ -1,6 +1,0 @@
-{
-    "Description": "Mean number of unique non-reference allele observations per sample with the corresponding alternate alleles.",
-    "ID": "MEANALT",
-    "Number": "A",
-    "Type": "Float"
-}
