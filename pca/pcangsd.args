@@ -1,9 +1,0 @@
-PCAngsd v.1.10
-Time: 18/12/2022 21:59:59
-Directory: /move_bioinfo/anopheles_cnrfp/angsd_output/allsamples_3L
-Options:
-	-beagle cnrfp_allsamples_wg_AgamP4_3L.hd.beagle.gz
-	-threads 10
-	-pcadapt
-	-inbreedSamples
-	-admix

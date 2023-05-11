@@ -1,4 +1,0 @@
-for f in `ls s_form*.mafs.gz | sed s/.mafs.gz//g`
-	do
-	zcat $f'.mafs.gz' | sed '1d' | cut -f 1,2 > $f'.pos'
-	done
