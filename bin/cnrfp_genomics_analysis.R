@@ -1,7 +1,6 @@
 #-----------------------------------------------------------#
 #avecnet genomics analysis
 #-----------------------------------------------------------#
-
 #setup env
 #load and.or install packages we need
 pkg = c("tidyverse", "sjPlot", "cowplot", "data.table", "DHARMa", "lme4", "MASS", "ggthemes")
@@ -20,9 +19,18 @@ theme_set(theme_cowplot(font_size=17, font_family = "serif") +
 #metadata
 metadata <- fread('~/Projects/avecnet_popgen/metadata/sequenced_metadata_avecnet.csv')
 #load fsts
-fst_df =  fread("~/Projects/avecnet_popgen/data/fst/fst_xyearmo_xcluster.txt")
+afst_df =  fread("~/Projects/avecnet_popgen/data/fst/fst_xyearmo_xcluster.txt")
+fst_df <- fread('/Users/dennistpw/Library/Mobile\ Documents/com~apple~CloudDocs/avecnet\ paper/fst_bysiteby.txt')
+morefst = cbind(fst_df, afst_df[,4:10])
+hist(morefst$V1)
+colnames(morefst) <- c('unweighted_fst','weighted_fst',colnames(afst_df[,4:10]))
+
+hist(fst_df$fst_weighted, breaks=50)
+
+
 #between each group and every other group
-fst =fst_df %>% group_by(month_a, cluster_a, year_a, treated) %>% summarise(mean_fst = mean(fst_weighted))
+fst =morefst %>% group_by(month_a, cluster_a, year_a, treated) %>% summarise(mean_fst = mean(weighted_fst))
+
 #make timepoints and cap negative fst at zero
 fst$fst = pmax(fst$mean_fst,0)
 fst$timep = paste0(fst$year_a,'_',fst$month_a)
@@ -32,7 +40,7 @@ fst$timep <- factor(fst$timep, levels = c("2014_7","2014_8","2014_9","2014_11","
 thetas=fread('~/Projects/avecnet_popgen/data/thetas/avecnet_thetas.csv')
 
 #inbreeding coefficients
-inbreedin_coeffs = fread('~/Projects/avecnet_popgen/data/fis/cnrfp_3l.34856_seed.final', col.names = c('fis_pcangsd'))
+inbreedin_coeffs = fread('~/Projects/avecnet_popgen/data/fis/cnrfp_3l.34856_seed.final', col.names = c('fis'))
 
 #bind iunbreeding coeffs to data
 metadata_seq_fis = cbind(metadata, inbreedin_coeffs)
@@ -41,26 +49,29 @@ metadata_seq_fis = cbind(metadata, inbreedin_coeffs)
 #models of difference in fst, pi and fis by year and tx
 #-----------------------------------------------------------#
 #model (insignificant)
-m1 = glm.nb(formula = mean_fst ~ treated * as.factor(year_a), data = fst)
+
+#uncapped fsts make gaussian distribution (though for allele freq)
+m1 = glm(formula = mean_fst ~ treated * as.factor(year_a), data = fst, family="gaussian")
 m1simulationOutput <- simulateResiduals(fittedModel = m1, plot = F)
 residuals(m1simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
 plot(m1simulationOutput)
 drop1(m1)
+summary(m1)
 #model for pi
-m2 = glm.nb(formula = pi ~ treated * as.factor(year), data = thetas)
+#pi also follows gaussian
+m2 = glm(formula = log(pi) ~ treated * as.factor(year), data = thetas,family="gaussian")
 summary(m2)
 m2simulationOutput <- simulateResiduals(fittedModel = m2, plot = F)
 residuals(m2simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
 plot(m2simulationOutput)
-drop1(m2)
-#fis
-m3 = glm.nb(formula = fis_ngsf ~ treated * as.factor(year), data = metadata_seq_fis)
+plot(m2)
+#fis - gaussian
+m3 = glm(formula = fis ~ treated * as.factor(year), data = metadata_seq_fis, family="gaussian")
 summary(m3)
 m3simulationOutput <- simulateResiduals(fittedModel = m3, plot = F)
 residuals(m3simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
 plot(m3simulationOutput)
 drop1(m3)
-
 #hist(metadata_seq_fis$fis_ngsf)
 
 #-----------------------------------------------------------#
@@ -85,7 +96,6 @@ pc12plot = ggplot(pcaframe, aes(x=X1, y=X2, colour=as.factor(treated)))+
   geom_point(alpha=0.7)+
   theme_tufte()+
   theme(text = element_text(size = 17)) 
-pc12plot
 
 #fsts
 fstplt = ggplot(fst, aes(x=as.factor(year_a), y=mean_fst, colour=as.factor(treated)))+
@@ -108,7 +118,7 @@ piplt = ggplot(thetas, aes(x=as.factor(year), y=pi,color=as.factor(treated)))+
   theme(legend.position = "none")
 
 #inbreeding coeffs
-fisplt = ggplot(metadata_seq_fis, aes(x=as.factor(year), y=fis_ngsf,color=as.factor(treated)))+
+fisplt = ggplot(metadata_seq_fis, aes(x=as.factor(year), y=fis,color=as.factor(treated)))+
   geom_jitter(position = position_jitterdodge(),alpha=0.7)+
   geom_boxplot(outlier.shape = NA, alpha=0.5)+
   labs(x='', y='Fis')+
@@ -143,7 +153,7 @@ thetasub = thetas[,c('month','year','timep','treated','cluster','pi')]
 fstsub = fst[,c('month_a','year_a','timep','treated','cluster_a','mean_fst')]
 colnames(fstsub) <- c('month','year','timep','treated','cluster','mean_fst')
 
-fissum = aggregate(fis_ngsf ~Cluster+ month + year + treated, data = metadata_seq_fis, FUN = mean)
+fissum = aggregate(fis ~cluster+ month + year + treated, data = metadata_seq_fis, FUN = mean)
 fissum$timep = as.character(paste0(fissum$year, '_', fissum$month))
 colnames(fissum) <- c('cluster','month','year','treated','mean_fis','timep')
 
@@ -169,7 +179,6 @@ fiscounts = ggplot(data=mean_divs, aes(x=mean_fis,y=counts, colour=as.factor(tre
   theme(text = element_text(size = 15),
         legend.position = "none")
 
-
 picounts = ggplot(data=mean_divs, aes(x=pi,y=counts, colour=as.factor(treated)))+
   scale_color_manual(values = pal)+
   geom_point(size=2, alpha=0.7)+
@@ -178,7 +187,8 @@ picounts = ggplot(data=mean_divs, aes(x=pi,y=counts, colour=as.factor(treated)))
   theme(text = element_text(size = 15)) 
 
 txlegend = get_legend(picounts) #extract legend
- 
+
+#plot final nice plot
 countplots = cowplot::plot_grid(
   fstcounts,
   fiscounts,
@@ -186,7 +196,7 @@ countplots = cowplot::plot_grid(
   txlegend,
   labels = c('A','B','C')
 )
-
+countplots
 #-----------------------------------------------------------#
 #models of relationship between diffs and divs and counts
 #-----------------------------------------------------------#
@@ -194,8 +204,18 @@ countplots = cowplot::plot_grid(
 ####NBINOM
 #look at residuals for each mode,  in drop1, the year doesn't add anything, so will remove
 #ggplot predict GLM
-c1 = glm(formula = counts ~ mean_fis* as.factor(treated) + year * as.factor(treated), data = mean_divs)
-summary(c1)
+
+
+hist(mean_divs$mean_fis)
+c1 = glm.nb(formula = counts ~ mean_fis* as.factor(treated) + year * as.factor(treated), data = mean_divs)
+
+
+mean_divs$cluster <- as.factor(mean_divs$cluster)
+
+c1 = lme4::glmer(formula = mean_fis ~ counts+ as.factor(treated) + year * as.factor(treated) + (1|cluster), data = mean_divs, family=binomial(link='logit'), control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
+
+
+
 c1simulationOutput <- simulateResiduals(fittedModel = c1, plot = F)
 residuals(c1simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
 plot(c1simulationOutput)
@@ -225,6 +245,32 @@ residuals(c3simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
 plot(c3simulationOutput)
 drop1(c3) 
 MuMIn::r.squaredGLMM(c3)
+
+#-----------------------------------------------------------#
+#genome scans
+#-----------------------------------------------------------#
+
+#fst
+
+
+
+
+
+#-----------------------------------------------------------#
+#isolation by distance and relatedness
+#-----------------------------------------------------------#
+
+res = fread('~/Projects/avecnet_popgen/data/relatedness/AgamP4_3L.res')
+res = left_join(res, metadata_seq_fis, by=c('a'='bamorder')) %>% left_join(., metadata, by=c('b'='bamorder'))
+res$pdist = geosphere::distVincentyEllipsoid(res[,c('lat.x','long.x')], res[,c('lat.y','long.y')])
+ggplot(res, aes(x=pdist, y=rab))+
+  geom_point()
+
+
+res$txpair <- paste0(res$treated.x, res$treated.y)
+
+ggplot(res,aes(x=pdist, y=rab))+
+  geom_point()
 
 
 ####genome scans
