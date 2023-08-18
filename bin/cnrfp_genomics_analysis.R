@@ -3,7 +3,7 @@
 #-----------------------------------------------------------#
 #setup env
 #load and.or install packages we need
-pkg = c("tidyverse", "sjPlot", "cowplot", "data.table", "DHARMa", "lme4", "MASS", "ggthemes")
+pkg = c("tidyverse", "sjPlot", "cowplot", "data.table", "DHARMa", "lme4", "MASS", "ggthemes", "vegan")
 #install.packages(pkg) #install packages if you need them and load
 new.packages <- pkg[!(pkg %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
@@ -25,7 +25,11 @@ morefst = cbind(fst_df, afst_df[,4:10])
 hist(morefst$V1)
 colnames(morefst) <- c('unweighted_fst','weighted_fst',colnames(afst_df[,4:10]))
 
-hist(fst_df$fst_weighted, breaks=50)
+
+x = aggregate(metadata, by=list(metadata$month, metadata$year, metadata$cluster), FUN=length)
+tab_samples_sequenced <- x[1:4]
+colnames(tab_samples_sequenced) <- c('month','year','cluster','num_sequenced')
+write.table(tab_samples_sequenced, '~/Projects/avecnet_popgen/metadata/samples_sequenced_bycluster_yearmonth.txt')
 
 
 #between each group and every other group
@@ -59,7 +63,7 @@ drop1(m1)
 summary(m1)
 #model for pi
 #pi also follows gaussian
-m2 = glm(formula = log(pi) ~ treated * as.factor(year), data = thetas,family="gaussian")
+m2 = glm(formula = pi ~ treated * as.factor(year), data = thetas,family="gaussian")
 summary(m2)
 m2simulationOutput <- simulateResiduals(fittedModel = m2, plot = F)
 residuals(m2simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
@@ -137,10 +141,11 @@ divplots = cowplot::plot_grid(fstplt,
                               labels=c('B','C','D'))
 
 
-countplots = cowplot::plot_grid(pc12plot + theme(legend.position = "none"),
+strucplots = cowplot::plot_grid(pc12plot + theme(legend.position = "none"),
                                 divplots,
                                 labels = 'A')
 
+ggsave(strucplots, device = 'pdf', filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Fig4_popstruc_diversity.pdf', width = 10, height = 5, units = 'in')
 #-----------------------------------------------------------#
 #do population connectivity and size show a relationship? include this or not? wait till mv sends data, do analysis, then report to her
 #-----------------------------------------------------------#
@@ -196,7 +201,7 @@ countplots = cowplot::plot_grid(
   txlegend,
   labels = c('A','B','C')
 )
-countplots
+ggsave(countplots, device = 'pdf', filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Fig5_counts.pdf', width = 8, height = 7, units = 'in')
 #-----------------------------------------------------------#
 #models of relationship between diffs and divs and counts
 #-----------------------------------------------------------#
@@ -213,9 +218,6 @@ c1 = glm.nb(formula = counts ~ mean_fis* as.factor(treated) + year * as.factor(t
 mean_divs$cluster <- as.factor(mean_divs$cluster)
 
 c1 = lme4::glmer(formula = mean_fis ~ counts+ as.factor(treated) + year * as.factor(treated) + (1|cluster), data = mean_divs, family=binomial(link='logit'), control=glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=2e5)))
-
-
-
 c1simulationOutput <- simulateResiduals(fittedModel = c1, plot = F)
 residuals(c1simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
 plot(c1simulationOutput)
@@ -238,23 +240,14 @@ summary(modc2)
 
 #look at residuals for each model, in drop1, the year doesn't add anything, so will remove
 #ggplot predict GLM
-c3 = glm.nb(formula = counts ~ pi* as.factor(treated) + year * as.factor(treated), data = mean_divs)
+c3 = glm(formula = pi~counts * as.factor(treated) + year * as.factor(treated), data = mean_divs, family = 'binomial')
 summary(c3)
 c3simulationOutput <- simulateResiduals(fittedModel = c3, plot = F)
 residuals(c3simulationOutput, quantileFunction = qnorm, outlierValues = c(0,1))
 plot(c3simulationOutput)
 drop1(c3) 
 MuMIn::r.squaredGLMM(c3)
-
-#-----------------------------------------------------------#
-#genome scans
-#-----------------------------------------------------------#
-
-#fst
-
-
-
-
+effectsize::standardize_parameters(c3)
 
 #-----------------------------------------------------------#
 #isolation by distance and relatedness
@@ -263,40 +256,40 @@ MuMIn::r.squaredGLMM(c3)
 res = fread('~/Projects/avecnet_popgen/data/relatedness/AgamP4_3L.res')
 res = left_join(res, metadata_seq_fis, by=c('a'='bamorder')) %>% left_join(., metadata, by=c('b'='bamorder'))
 res$pdist = geosphere::distVincentyEllipsoid(res[,c('lat.x','long.x')], res[,c('lat.y','long.y')])
-ggplot(res, aes(x=pdist, y=rab))+
-  geom_point()
 
+relatedness_resplot <- ggplot(res, aes(x=pdist, y=rab))+
+  geom_point(size=2, alpha=0.7)+
+  labs(x='Geographic Distance (m)', y='Rxy')
 
-res$txpair <- paste0(res$treated.x, res$treated.y)
+#make rab distance matrix and drop first col (that contains id B)
+gdmat <- pivot_wider(res[,c('a', 'b','rab')], names_from = a, values_from = rab)
+gdmat<- gdmat[,-1]
 
-ggplot(res,aes(x=pdist, y=rab))+
-  geom_point()
+#ditto with pdist
+pdmat <- pivot_wider(res[,c('a', 'b','pdist')], names_from = a, values_from = pdist)
+pdmat <- pdmat[,-1]
 
+res_isobd <- vegan::mantel(gdmat, pdmat, na.rm = TRUE)
+res_isobd
+
+ggsave(filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Supplementary Information/Fig_S3_isobd.pdf', plot = fstscan, device = 'pdf', width = 15, height=5)
 
 ####genome scans
-#ann <- fread('/Users/dennistpw/Library/Mobile Documents/com~apple~CloudDocs/Projects/anopheles_cnrfp/VectorBase-62_AgambiaePEST.gff', col.names = c("chrom",'source','feature','start','end','pt','sense','pt2','note'))
-#fsttxuntx <- fread('/Users/dennistpw/Projects/anopheles_pmi_cnrfp/treated_untreated.win5step1')
-#colnames(fsttxuntx) <- c('gubbins','chrom','pos','nsites','fst')
-#ggplot(fsttxuntx, aes(x=pos,y=fst,colour=chrom))+
-#  theme_classic()+
-#  geom_point()+
-#  facet_grid(~chrom, scales = "free_x")+
-#  scale_color_brewer(palette="Set2")
-#
-#newfst = fsttxuntx[fsttxuntx$fst > 0.01]
-#
-#
-#
-#fst_bed = data.frame(cbind(newfst$chrom,
-#                           newfst$pos - 2500,
-#                           newfst$pos + 2500))
-#fst_bed$start <- as.numeric(fst_bed$start)
-#fst_bed$end <- as.numeric(fst_bed$end)
-#
-#
-#colnames(fst_bed) <- c('chrom', 'start', 'end')
-#x = valr::bed_intersect(fst_bed, ann)
-#t = x %>% select(feature.y, note.y) %>% filter(feature.y == 'protein_coding_gene')
-#
+ann <- fread('/Users/dennistpw/Library/Mobile Documents/com~apple~CloudDocs/Projects/anopheles_cnrfp/VectorBase-62_AgambiaePEST.gff', col.names = c("chrom",'source','feature','start','end','pt','sense','pt2','note'))
+fsttxuntx <- fread('/Users/dennistpw/Projects/avecnet_popgen/data/fst_scan/treated_untreated.win1.txt')
+colnames(fsttxuntx) <- c('gubbins','chrom','pos','nsites','fst')
+
+
+subset_df <- fsttxuntx[sample(nrow(fsttxuntx), 100000), ]
+fstscan <- ggplot(subset_df, aes(x=pos,y=fst,colour=chrom))+
+  theme_classic()+
+  geom_point()+
+  facet_grid(~chrom, scales = "free_x")+
+  scale_color_brewer(palette="Set2")+
+  theme(legend.position = "none")
+ggsave(filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Supplementary Information/Fig_S4_genomescan.pdf', plot = fstscan, device = 'pdf', width = 15, height=5)
+
+
+
 #
 #
