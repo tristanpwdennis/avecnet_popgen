@@ -18,6 +18,7 @@ theme_set(theme_cowplot(font_size=17, font_family = "serif") +
 #-----------------------------------------------------------#
 #metadata
 metadata <- fread('~/Projects/avecnet_popgen/metadata/sequenced_metadata_avecnet.csv')
+
 #load fsts
 afst_df =  fread("~/Projects/avecnet_popgen/data/fst/fst_xyearmo_xcluster.txt")
 fst_df <- fread('/Users/dennistpw/Library/Mobile\ Documents/com~apple~CloudDocs/avecnet\ paper/fst_bysiteby.txt')
@@ -34,6 +35,22 @@ write.table(tab_samples_sequenced, '~/Projects/avecnet_popgen/metadata/samples_s
 
 #between each group and every other group
 fst =morefst %>% group_by(month_a, cluster_a, year_a, treated) %>% summarise(mean_fst = mean(weighted_fst))
+summary(fst$mean_fst)
+#is there isobod in fst
+x <- metadata %>% dplyr::select(cluster, lat, long) %>% unique()
+xy<- morefst %>% left_join(x, by=c('cluster_a' = 'cluster')) %>% left_join(x, by=c('cluster_b' = 'cluster'))
+xy$pdist = geosphere::distVincentyEllipsoid(xy[,c('lat.x','long.x')], xy[,c('lat.y','long.y')])
+
+xy %>% filter(year_a == year_b) %>% 
+  ggplot(., aes(x=pdist,y=weighted_fst))+
+  geom_point()+
+  facet_grid(~paste0(year_a, year_b))
+
+
+#get num groups for fst comps
+fst_groups <- metadata %>% group_by(cluster, year) %>% count()
+summary(fst_groups)
+
 
 #make timepoints and cap negative fst at zero
 fst$fst = pmax(fst$mean_fst,0)
@@ -41,7 +58,7 @@ fst$timep = paste0(fst$year_a,'_',fst$month_a)
 fst$timep <- factor(fst$timep, levels = c("2014_7","2014_8","2014_9","2014_11","2015_7","2015_9","2015_11"))
 
 #read thetas
-thetas=fread('~/Projects/avecnet_popgen/data/thetas/avecnet_thetas.csv')
+thetas=fread('~/Projects/avecnet_popgen//data/thetas/avecnet_thetas.csv')
 
 #inbreeding coefficients
 inbreedin_coeffs = fread('~/Projects/avecnet_popgen/data/fis/cnrfp_3l.34856_seed.final', col.names = c('fis'))
@@ -53,6 +70,7 @@ metadata_seq_fis = cbind(metadata, inbreedin_coeffs)
 #models of difference in fst, pi and fis by year and tx
 #-----------------------------------------------------------#
 #model (insignificant)
+min(inbreedin_coeffs$fis)
 
 #uncapped fsts make gaussian distribution (though for allele freq)
 m1 = glm(formula = mean_fst ~ treated * as.factor(year_a), data = fst, family="gaussian")
@@ -98,7 +116,7 @@ pc12plot = ggplot(pcaframe, aes(x=X1, y=X2, colour=as.factor(treated)))+
   scale_color_manual(values = pal)+
   labs(x="PC1 (0.7%)", y="PC2 (0.1%)", colour = 'Treated')+
   geom_point(alpha=0.7)+
-  theme_tufte()+
+  theme_classic()+
   theme(text = element_text(size = 17)) 
 
 #fsts
@@ -106,7 +124,7 @@ fstplt = ggplot(fst, aes(x=as.factor(year_a), y=mean_fst, colour=as.factor(treat
   geom_jitter(position = position_jitterdodge(),alpha=0.7)+
   geom_boxplot(outlier.shape = NA, alpha=0.5)+
   labs(x='', y='Fst')+
-  theme_tufte()+
+  theme_classic()+
   scale_color_manual(values = pal)+
   theme(text = element_text(size = 17)) +
   theme(legend.position = "none")
@@ -116,7 +134,7 @@ piplt = ggplot(thetas, aes(x=as.factor(year), y=pi,color=as.factor(treated)))+
   geom_jitter(position = position_jitterdodge(),alpha=0.7)+
   geom_boxplot(outlier.shape = NA, alpha=0.5)+
   labs(x='', y='π')+
-  theme_tufte()+
+  theme_classic()+
   scale_color_manual(values = pal)+
   theme(text = element_text(size = 17)) +
   theme(legend.position = "none")
@@ -126,7 +144,7 @@ fisplt = ggplot(metadata_seq_fis, aes(x=as.factor(year), y=fis,color=as.factor(t
   geom_jitter(position = position_jitterdodge(),alpha=0.7)+
   geom_boxplot(outlier.shape = NA, alpha=0.5)+
   labs(x='', y='Fis')+
-  theme_tufte()+
+  theme_classic()+
   scale_color_manual(values = pal)+
   theme(text = element_text(size = 17)) +
   theme(legend.position = "none")
@@ -138,14 +156,28 @@ divplots = cowplot::plot_grid(fstplt,
                               piplt, 
                               fisplt, 
                               pcalegend,
+                              align = 'hv',
+                              axis = 'lb',
                               labels=c('B','C','D'))
 
+
+?cowplot::plot_grid()
 
 strucplots = cowplot::plot_grid(pc12plot + theme(legend.position = "none"),
                                 divplots,
                                 labels = 'A')
 
 ggsave(strucplots, device = 'pdf', filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Fig4_popstruc_diversity.pdf', width = 10, height = 5, units = 'in')
+
+strucplots
+
+#now plot lower PCs
+ggplot(pcaframe, aes(x=X3, y=X4, colour=as.factor(cluster)))+
+  geom_point()
+
+ggplot(pcaframe, aes(x=X5, y=X6, colour=as.factor(cluster)))+
+  geom_point()
+
 #-----------------------------------------------------------#
 #do population connectivity and size show a relationship? include this or not? wait till mv sends data, do analysis, then report to her
 #-----------------------------------------------------------#
@@ -254,10 +286,14 @@ effectsize::standardize_parameters(c3)
 #-----------------------------------------------------------#
 
 res = fread('~/Projects/avecnet_popgen/data/relatedness/AgamP4_3L.res')
-res = left_join(res, metadata_seq_fis, by=c('a'='bamorder')) %>% left_join(., metadata, by=c('b'='bamorder'))
+res = left_join(res, metadata, by=c('a'='bamorder')) %>% left_join(., metadata, by=c('b'='bamorder'))
 res$pdist = geosphere::distVincentyEllipsoid(res[,c('lat.x','long.x')], res[,c('lat.y','long.y')])
 
-relatedness_resplot <- ggplot(res, aes(x=pdist, y=rab))+
+summary(res[res$pdist != 0,]$pdist)
+
+median(res$KING)
+
+relatedness_resplot <- ggplot(res, aes(x=pdist, y=KING))+
   geom_point(size=2, alpha=0.7)+
   labs(x='Geographic Distance (m)', y='Rxy')
 
@@ -272,7 +308,7 @@ pdmat <- pdmat[,-1]
 res_isobd <- vegan::mantel(gdmat, pdmat, na.rm = TRUE)
 res_isobd
 
-ggsave(filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Supplementary Information/Fig_S3_isobd.pdf', plot = fstscan, device = 'pdf', width = 15, height=5)
+ggsave(filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Supplementary Information/Fig_S3_isobd.pdf', plot = relatedness_resplot, device = 'pdf', width = 15, height=5)
 
 ####genome scans
 ann <- fread('/Users/dennistpw/Library/Mobile Documents/com~apple~CloudDocs/Projects/anopheles_cnrfp/VectorBase-62_AgambiaePEST.gff', col.names = c("chrom",'source','feature','start','end','pt','sense','pt2','note'))
@@ -290,6 +326,48 @@ fstscan <- ggplot(subset_df, aes(x=pos,y=fst,colour=chrom))+
 ggsave(filename = '/Users/dennistpw/Dropbox (LSTM)/Paper_Dennis_etal/Supplementary Information/Fig_S4_genomescan.pdf', plot = fstscan, device = 'pdf', width = 15, height=5)
 
 
+####
+#igraph plot fst?
+####
 
-#
-#
+library(igraph)
+
+
+
+plot_igraph <- function(year) {
+df_nodes <- metadata %>% dplyr::select(cluster, lat, long) %>% unique()
+df = afst_df %>% left_join(df_nodes, by=c('cluster_a' = 'cluster')) %>% left_join(df_nodes, by=c('cluster_b' = 'cluster')) %>% filter(year_a == year_b)
+
+# Create an edge list
+df_edges <- df[, c("cluster_a", "cluster_b", "fst_weighted")]
+
+df_edges <- df_edges[df_edges$cluster_a != df_edges$cluster_b, ]
+
+
+g <- graph_from_data_frame(d = df_edges, directed = FALSE, vertices = df_nodes)
+# Ensure the node names are character for proper matching
+V(g)$name <- as.character(V(g)$name)
+
+V(g)$x <- df_nodes$long
+V(g)$y <- df_nodes$lat
+
+layout <- matrix(c(V(g)$x, V(g)$y), ncol = 2)
+
+# Create a color palette function
+palette <- colorRampPalette(c('#440154', "#fde725"))
+
+# Map the edge strength to colors
+df_edges$order = findInterval(df_edges$fst_weighted, sort(df_edges$fst_weighted))
+
+pal = palette(nrow(df_edges))[df_edges$order]
+
+# Assign colors to the edges
+E(g)$color <- pal
+
+# Plot the graph
+plot(g, layout = layout, vertex.size = 30, vertex.label = V(g)$name, edge.width = 2,edge.color = E(g)$color)
+}
+plot_igraph()
+
+afst_df %>% dplyr::select(year, month, cluster) %>% unique() %>% group_by(year, month, cluster) %>% count()
+
