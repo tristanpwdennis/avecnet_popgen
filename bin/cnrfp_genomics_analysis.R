@@ -101,7 +101,7 @@ drop1(m3)
 #-----------------------------------------------------------#
 
 #dual colour palette yellow and blue
-pal = c('#f2be54','#153e5c')
+pal = c('#153e5c','#f2be54')
 
 #pca
 x =  fread('~/Projects/avecnet_popgen/data/pca/pcangsd.cov')
